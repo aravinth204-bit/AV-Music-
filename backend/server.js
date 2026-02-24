@@ -6,10 +6,11 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for all routes (allows Netlify frontend to communicate with Render/Railway backend)
+// Enable CORS
 app.use(cors({
     origin: "*",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 // Parse JSON bodies
@@ -155,6 +156,15 @@ app.post('/api/favorites', (req, res) => {
         res.status(200).json({ message: "Removed from favorites", favorites: updatedFavorites });
     }
 });
+
+// Serve frontend in production
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../dist')));
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, '../dist', 'index.html'));
+    });
+}
 
 // Start the server
 app.listen(PORT, () => {

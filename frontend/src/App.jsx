@@ -9,10 +9,10 @@ import NowPlayingCard from './components/NowPlayingCard';
 import Tabs from './components/Tabs';
 import SongList from './components/SongList';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api');
 
 function App() {
-  const { currentSong, isPlaying, playNext, playPrev, pauseSong, resumeSong, setQueue, queue, isSearching, searchResults, setSearchResults } = usePlayerStore();
+  const { currentSong, isPlaying, playNext, playPrev, pauseSong, resumeSong, setQueue, queue, isSearching, searchResults, setSearchResults, hasSearched } = usePlayerStore();
 
   const audioRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -91,7 +91,7 @@ function App() {
     isPlaying ? pauseSong() : resumeSong();
   };
 
-  const isSearchActiveView = isSearching || searchResults.length > 0;
+  const isSearchActiveView = isSearching || searchResults.length > 0 || hasSearched;
 
   return (
     <div className="min-h-[100dvh] bg-slate-900 border-x border-white/5 text-slate-100 flex flex-col font-sans pb-10 selection:bg-[#00ffcc]/30 w-[95%] max-w-[420px] lg:w-[80vw] lg:max-w-[1200px] mx-auto shadow-2xl relative overflow-x-hidden">
@@ -138,7 +138,12 @@ function App() {
                 <div className="flex items-center justify-between mb-6 px-1">
                   <h2 className="text-[17px] font-bold tracking-wide text-white drop-shadow-sm">Search Results</h2>
                   <button
-                    onClick={() => setSearchResults([])}
+                    onClick={() => {
+                      setSearchResults([]);
+                      if (usePlayerStore.getState().setHasSearched) {
+                        usePlayerStore.getState().setHasSearched(false);
+                      }
+                    }}
                     className="text-[11px] font-bold text-slate-400 hover:text-white uppercase tracking-wider bg-slate-800 hover:bg-slate-700 px-4 py-1.5 rounded-full transition-colors focus:outline-none"
                   >
                     Close

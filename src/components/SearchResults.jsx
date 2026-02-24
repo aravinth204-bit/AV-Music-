@@ -4,7 +4,7 @@ import SongCard from './SongCard';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function SearchResults() {
-    const { searchResults, isSearching } = usePlayerStore();
+    const { searchResults, isSearching, hasSearched } = usePlayerStore();
 
     if (isSearching) {
         return (
@@ -16,6 +16,14 @@ function SearchResults() {
     }
 
     if (searchResults.length === 0) {
+        if (hasSearched) {
+            return (
+                <div className="flex-1 flex flex-col items-center justify-center py-20 text-slate-500">
+                    <p className="text-lg">No results found for your search</p>
+                    <p className="text-sm">Try a different track name</p>
+                </div>
+            );
+        }
         return (
             <div className="flex-1 flex flex-col items-center justify-center py-20 text-slate-500">
                 <p className="text-lg">Discover your next favorite song</p>

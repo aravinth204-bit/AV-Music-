@@ -16,11 +16,13 @@ const usePlayerStore = create((set, get) => ({
     queue: [],
     searchResults: [],
     isSearching: false,
+    hasSearched: false,
     favorites: loadInitialFavorites(),
     activeTab: 'Up Next',
 
     setSearchResults: (results) => set({ searchResults: results }),
     setIsSearching: (isSearching) => set({ isSearching }),
+    setHasSearched: (hasSearched) => set({ hasSearched }),
     setActiveTab: (tab) => set({ activeTab: tab }),
 
     toggleFavorite: (song) => set((state) => {

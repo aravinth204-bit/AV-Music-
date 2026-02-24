@@ -10,9 +10,18 @@ function SearchBar({ api }) {
 
     const handleSearch = async (e) => {
         e.preventDefault();
-        if (!query.trim()) return;
+        if (!query.trim()) {
+            setSearchResults([]);
+            if (usePlayerStore.getState().setHasSearched) {
+                usePlayerStore.getState().setHasSearched(false);
+            }
+            return;
+        }
 
         setIsSearching(true);
+        if (usePlayerStore.getState().setHasSearched) {
+            usePlayerStore.getState().setHasSearched(true);
+        }
         try {
             const res = await axios.get(`${api}/search?q=${encodeURIComponent(query)}`);
             setSearchResults(res.data);

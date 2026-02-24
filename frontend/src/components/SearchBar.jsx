@@ -13,10 +13,16 @@ function SearchBar({ api }) {
             if (!query.trim()) {
                 setSearchResults([]);
                 setIsSearching(false);
+                if (usePlayerStore.getState().setHasSearched) {
+                    usePlayerStore.getState().setHasSearched(false);
+                }
                 return;
             }
 
             setIsSearching(true);
+            if (usePlayerStore.getState().setHasSearched) {
+                usePlayerStore.getState().setHasSearched(true);
+            }
             try {
                 const res = await axios.get(`${api}/search?q=${encodeURIComponent(query)}`);
                 setSearchResults(res.data || []);
