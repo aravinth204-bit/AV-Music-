@@ -9,7 +9,7 @@ import NowPlayingCard from './components/NowPlayingCard';
 import Tabs from './components/Tabs';
 import SongList from './components/SongList';
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api');
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 function App() {
   const { currentSong, isPlaying, playNext, playPrev, pauseSong, resumeSong, setQueue, queue, isSearching, searchResults, setSearchResults, hasSearched } = usePlayerStore();

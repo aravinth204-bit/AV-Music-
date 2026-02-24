@@ -7,18 +7,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Enable CORS
-app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-}));
+app.use(cors({ origin: "*" }));
 
 // Parse JSON bodies
 app.use(express.json());
 
 // 1. Serve audio files from the '/songs' folder using static hosting
-// This means a file at backend/songs/song1.mp3 can be accessed at /songs/song1.mp3
-app.use('/songs', express.static(path.join(__dirname, 'songs')));
+const songsPath = path.join(__dirname, "songs");
+app.use("/songs", express.static(songsPath));
 
 // Define paths for data storage
 const dataPath = path.join(__dirname, 'data');
@@ -56,13 +52,16 @@ app.get('/api/songs', async (req, res) => {
         // Fetch some trending/default songs for the initial queue
         const r = await ytSearch('top music hits');
         const videos = r.videos.slice(0, 10);
-        const results = videos.map((v, index) => ({
-            id: v.videoId,
-            title: v.title,
-            author: v.author.name,
-            thumbnail: v.thumbnail,
-            audioUrl: `/api/play?id=${v.videoId}`
-        }));
+        const results = videos.map((v, index) => {
+            const fileName = `${v.videoId}.mp3`;
+            return {
+                id: v.videoId,
+                title: v.title,
+                author: v.author.name,
+                thumbnail: v.thumbnail,
+                audioUrl: `/songs/${fileName}`
+            };
+        });
         res.json(results);
     } catch (error) {
         console.error("Error fetching default songs:", error);
@@ -82,13 +81,16 @@ app.get('/api/search', async (req, res) => {
         const r = await ytSearch(query);
         const videos = r.videos.slice(0, 15);
 
-        const results = videos.map(v => ({
-            id: v.videoId,
-            title: v.title,
-            author: v.author.name,
-            thumbnail: v.thumbnail,
-            audioUrl: `/api/play?id=${v.videoId}`
-        }));
+        const results = videos.map(v => {
+            const fileName = `${v.videoId}.mp3`;
+            return {
+                id: v.videoId,
+                title: v.title,
+                author: v.author.name,
+                thumbnail: v.thumbnail,
+                audioUrl: `/songs/${fileName}`
+            };
+        });
 
         res.json(results);
     } catch (error) {
@@ -97,33 +99,31 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-// Stream audio via yt-dlp-exec
-const ytDlp = require('yt-dlp-exec');
-app.get('/api/play', async (req, res) => {
+// Static media API endpoint
+app.get('/api/play', (req, res) => {
     try {
         const videoId = req.query.id;
         if (!videoId) return res.status(400).send("No video id provided");
 
-        const url = `https://www.youtube.com/watch?v=${videoId}`;
+        const fileName = `${videoId}.mp3`;
+        const filePath = path.join(songsPath, fileName);
 
-        // Use yt-dlp-exec to grab the direct audio stream URL
-        const info = await ytDlp(url, {
-            dumpSingleJson: true,
-            noCheckCertificates: true,
-            noWarnings: true,
-            format: 'bestaudio'
-        });
-
-        if (info && info.url) {
-            // Redirect the client's audio tag directly to the youtube audio stream
-            return res.redirect(info.url);
-        } else {
-            throw new Error("Could not find audio URL");
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: "File not found" });
         }
+
+        res.json({
+            url: `${req.protocol}://${req.get("host")}/songs/${fileName}`
+        });
     } catch (error) {
         console.error("Error playing video:", error);
-        res.status(500).send("Streaming failed");
+        res.status(500).json({ error: "Streaming failed" });
     }
+});
+
+// 5. Add error handling and return JSON for /api/related even if empty
+app.get('/api/related', (req, res) => {
+    res.json([]);
 });
 
 // 3. Add Favorites System: GET /api/favorites -> return saved favorites
