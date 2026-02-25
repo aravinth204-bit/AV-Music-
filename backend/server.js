@@ -59,7 +59,7 @@ app.get('/api/songs', async (req, res) => {
                 title: v.title,
                 author: v.author.name,
                 thumbnail: v.thumbnail,
-                audioUrl: `/songs/${fileName}`
+                audioUrl: `/api/play?id=${v.videoId}`
             };
         });
         res.json(results);
@@ -88,7 +88,7 @@ app.get('/api/search', async (req, res) => {
                 title: v.title,
                 author: v.author.name,
                 thumbnail: v.thumbnail,
-                audioUrl: `/songs/${fileName}`
+                audioUrl: `/api/play?id=${v.videoId}`
             };
         });
 
@@ -103,21 +103,24 @@ app.get('/api/search', async (req, res) => {
 app.get('/api/play', (req, res) => {
     try {
         const videoId = req.query.id;
-        if (!videoId) return res.status(400).send("No video id provided");
+        if (!videoId) return res.status(400).json({ error: "No video id provided" });
 
-        const fileName = `${videoId}.mp3`;
-        const filePath = path.join(songsPath, fileName);
+        res.setHeader('Content-Type', 'audio/mpeg');
+        const stream = ytdl(`https://www.youtube.com/watch?v=${videoId}`, { filter: 'audioonly' });
 
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ error: "File not found" });
-        }
-
-        res.json({
-            url: `${req.protocol}://${req.get("host")}/songs/${fileName}`
+        stream.on('error', (err) => {
+            console.error("YTDL Error:", err);
+            if (!res.headersSent) {
+                res.status(404).json({ error: "Song not found" });
+            }
         });
+
+        stream.pipe(res);
     } catch (error) {
         console.error("Error playing video:", error);
-        res.status(500).json({ error: "Streaming failed" });
+        if (!res.headersSent) {
+            res.status(500).json({ error: "Streaming failed" });
+        }
     }
 });
 

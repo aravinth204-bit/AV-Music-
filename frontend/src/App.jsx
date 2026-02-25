@@ -9,7 +9,7 @@ import NowPlayingCard from './components/NowPlayingCard';
 import Tabs from './components/Tabs';
 import SongList from './components/SongList';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API = import.meta.env.VITE_API_URL || '/api';
 
 function App() {
   const { currentSong, isPlaying, playNext, playPrev, pauseSong, resumeSong, setQueue, queue, isSearching, searchResults, setSearchResults, hasSearched } = usePlayerStore();
@@ -38,7 +38,7 @@ function App() {
     const fetchRelated = async () => {
       // In a completely static app, "related" can just be all songs
       try {
-        const res = await axios.get(`${API_URL}/songs`);
+        const res = await axios.get(`${API}/songs`);
         // Just use all songs as queue if no related logic
         // But exclude current song if possible
         let songs = res.data;
@@ -99,7 +99,7 @@ function App() {
       {currentSong && (
         <audio
           ref={audioRef}
-          src={`${API_URL.replace('/api', '')}${currentSong.audioUrl}`}
+          src={`${API.replace('/api', '')}${currentSong.audioUrl}`}
           onError={(e) => {
             console.error("HTML Audio Element Error:", e.target.error);
             if (isPlaying) pauseSong();
@@ -121,7 +121,7 @@ function App() {
         <Header />
 
         <div className="w-full z-10">
-          <SearchBar api={API_URL} />
+          <SearchBar api={API} />
         </div>
 
         <div className="w-full flex-1 flex flex-col items-center relative min-h-[500px] z-10 pb-6">
