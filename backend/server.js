@@ -160,14 +160,9 @@ app.post('/api/favorites', (req, res) => {
     }
 });
 
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../dist')));
-
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve(__dirname, '../dist', 'index.html'));
-    });
-}
+app.use((req, res) => {
+    res.status(404).json({ message: "Route not found" });
+});
 
 // Start the server
 app.listen(PORT, () => {
